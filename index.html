@@ -32,17 +32,48 @@
   <script>
     (function () {
       var ONELINK_URL = "https://get.domino-dreams.com/dbMT";
+      var META_WEB_MEDIA_SOURCE = "metaweb_int";
+      var META_WEB_MARKER = "meta_web_to_app";
 
       var qs = new URLSearchParams(window.location.search);
       var fbclid = qs.get("fbclid") || "";
 
+      function firstValue(keys, defaultValue) {
+        for (var i = 0; i < keys.length; i++) {
+          var value = qs.get(keys[i]);
+          if (value) return value;
+        }
+
+        return defaultValue || "";
+      }
+
+      function getMediaSource() {
+        var mediaSource = firstValue(["pid", "af_media_source", "utm_source"], META_WEB_MEDIA_SOURCE);
+        return mediaSource === "facebook" ? META_WEB_MEDIA_SOURCE : mediaSource;
+      }
+
+      function appendParam(url, key, value) {
+        if (!value) return url;
+        return url + "&" + key + "=" + encodeURIComponent(value);
+      }
+
       function buildFallback() {
         var base = ONELINK_URL
           + "?af_xp=custom"
-          + "&pid=facebook"
-          + "&c=" + encodeURIComponent(qs.get("utm_campaign") || "meta_test_campaign")
+          + "&pid=" + encodeURIComponent(getMediaSource())
+          + "&c=" + encodeURIComponent(firstValue(["c", "af_campaign", "utm_campaign"], "meta_web_unknown_campaign"))
           + "&af_dp=" + encodeURIComponent("dominodreams://mainactivity");
-        if (fbclid) base += "&af_sub2=" + encodeURIComponent(fbclid);
+
+        base = appendParam(base, "af_adset", firstValue(["af_adset", "utm_content", "utm_adset"]));
+        base = appendParam(base, "af_ad", firstValue(["af_ad", "utm_term", "utm_ad"]));
+        base = appendParam(base, "af_c_id", firstValue(["af_c_id", "af_campaign_id", "campaign_id", "utm_id"]));
+        base = appendParam(base, "af_campaign_id", firstValue(["af_campaign_id", "af_c_id", "campaign_id", "utm_id"]));
+        base = appendParam(base, "af_adset_id", firstValue(["af_adset_id", "adset_id"]));
+        base = appendParam(base, "af_ad_id", firstValue(["af_ad_id", "ad_id"]));
+        base = appendParam(base, "fbclid", fbclid);
+        base = appendParam(base, "af_sub2", fbclid);
+        base = appendParam(base, "af_sub5", META_WEB_MARKER);
+
         return base;
       }
 
@@ -50,23 +81,32 @@
         var result = window.AF_SMART_SCRIPT.generateOneLinkURL({
           oneLinkURL: ONELINK_URL,
           afParameters: {
-            mediaSource: { keys: ["utm_source"],   defaultValue: "TEST_FB" },
-            campaign:    { keys: ["utm_campaign"], defaultValue: "meta_test_campaign" },
-            adSet:       { keys: ["utm_content"] },
-            ad:          { keys: ["utm_term"] },
+            mediaSource: {
+              keys: ["pid", "af_media_source", "utm_source"],
+              overrideValues: { facebook: META_WEB_MEDIA_SOURCE },
+              defaultValue: META_WEB_MEDIA_SOURCE
+            },
+            campaign:    { keys: ["c", "af_campaign", "utm_campaign"], defaultValue: "meta_web_unknown_campaign" },
+            adSet:       { keys: ["af_adset", "utm_content", "utm_adset"] },
+            ad:          { keys: ["af_ad", "utm_term", "utm_ad"] },
             afSub2:      { keys: ["fbclid"] },
+            afSub5:      { keys: [], defaultValue: META_WEB_MARKER },
             afCustom: [
               { paramKey: "af_xp", defaultValue: "custom" },
-              { paramKey: "af_dp", defaultValue: "dominodreams://mainactivity" }
+              { paramKey: "af_dp", defaultValue: "dominodreams://mainactivity" },
+              { paramKey: "af_c_id", keys: ["af_c_id", "af_campaign_id", "campaign_id", "utm_id"] },
+              { paramKey: "af_campaign_id", keys: ["af_campaign_id", "af_c_id", "campaign_id", "utm_id"] },
+              { paramKey: "af_adset_id", keys: ["af_adset_id", "adset_id"] },
+              { paramKey: "af_ad_id", keys: ["af_ad_id", "ad_id"] }
             ]
           }
         });
         var url = (result && result.clickURL) ? result.clickURL : buildFallback();
-        window.location.href = url;
+        // window.location.href = url;
         showFallback(url);
       } catch (e) {
         var url = buildFallback();
-        window.location.href = url;
+        // window.location.href = url;
         showFallback(url);
       }
 
