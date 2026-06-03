@@ -45,15 +45,14 @@
     </div>
   </div>
 
-  <script src="https://onelinksmartscript.appsflyer.com/onelink-smart-script-latest.js"></script>
+  <script src="https://onelinksmartscript.appsflyersdk.com/onelink-smart-script-latest.js"></script>
   <script>
     (function () {
-      var ONELINK_URL = "https://get.domino-dreams.com/dbMT";
+      var ONELINK_URL = "https://dominodreams.onelink.me/dbMT";
       var META_WEB_MEDIA_SOURCE = "metaweb_int";
-      var META_WEB_MARKER = "meta_web_to_app";
+      var WEB_TO_APP_VALUE = "web2app";
 
       var qs = new URLSearchParams(window.location.search);
-      var fbclid = qs.get("fbclid") || "";
 
       function firstValue(keys, defaultValue) {
         for (var i = 0; i < keys.length; i++) {
@@ -64,11 +63,6 @@
         return defaultValue || "";
       }
 
-      function getMediaSource() {
-        var mediaSource = firstValue(["pid", "af_media_source", "utm_source"], META_WEB_MEDIA_SOURCE);
-        return mediaSource === "facebook" ? META_WEB_MEDIA_SOURCE : mediaSource;
-      }
-
       function appendParam(url, key, value) {
         if (!value) return url;
         return url + "&" + key + "=" + encodeURIComponent(value);
@@ -76,55 +70,55 @@
 
       function buildFallback() {
         var base = ONELINK_URL
-          + "?af_xp=custom"
-          + "&pid=" + encodeURIComponent(getMediaSource())
-          + "&c=" + encodeURIComponent(firstValue(["c", "af_campaign", "utm_campaign"], "meta_web_unknown_campaign"))
-          + "&af_dp=" + encodeURIComponent("dominodreams://mainactivity");
+          + "?af_js_web=true"
+          + "&pid=" + encodeURIComponent(firstValue(["pid"], META_WEB_MEDIA_SOURCE))
+          + "&c=" + encodeURIComponent(firstValue(["c"], "{{campaign.name}}"));
 
-        base = appendParam(base, "af_adset", firstValue(["af_adset", "utm_content", "utm_adset"]));
-        base = appendParam(base, "af_ad", firstValue(["af_ad", "utm_term", "utm_ad"]));
-        base = appendParam(base, "af_c_id", firstValue(["af_c_id", "af_campaign_id", "campaign_id", "utm_id"]));
-        base = appendParam(base, "af_campaign_id", firstValue(["af_campaign_id", "af_c_id", "campaign_id", "utm_id"]));
-        base = appendParam(base, "af_adset_id", firstValue(["af_adset_id", "adset_id"]));
-        base = appendParam(base, "af_ad_id", firstValue(["af_ad_id", "ad_id"]));
-        base = appendParam(base, "fbclid", fbclid);
-        base = appendParam(base, "af_sub2", fbclid);
-        base = appendParam(base, "af_sub5", META_WEB_MARKER);
+        base = appendParam(base, "campaign_id", firstValue(["campaign_id"], "{{campaign.id}}"));
+        base = appendParam(base, "af_adset", firstValue(["af_adset"], "{{adset.name}}"));
+        base = appendParam(base, "adset_id", firstValue(["adset_id"], "{{adset.id}}"));
+        base = appendParam(base, "ad_name", firstValue(["ad_name"], "{{ad.name}}"));
+        base = appendParam(base, "ad_id", firstValue(["ad_id"], "{{ad.id}}"));
+        base = appendParam(base, "fbclid", firstValue(["fbclid"]));
+        base = appendParam(base, "af_sub5", firstValue(["fbclid"]));
+        base = appendParam(base, "af_sub4", firstValue(["web2app"], WEB_TO_APP_VALUE));
+        base = appendParam(base, "af_ss_ui", "true");
 
         return base;
       }
 
+      function redirectTo(url) {
+        window.location.href = url;
+        showFallback(url);
+      }
+
       try {
+        if (!window.AF_SMART_SCRIPT || !window.AF_SMART_SCRIPT.generateOneLinkURL) {
+          redirectTo(buildFallback());
+          return;
+        }
+
         var result = window.AF_SMART_SCRIPT.generateOneLinkURL({
           oneLinkURL: ONELINK_URL,
           afParameters: {
-            mediaSource: {
-              keys: ["pid", "af_media_source", "utm_source"],
-              overrideValues: { facebook: META_WEB_MEDIA_SOURCE },
-              defaultValue: META_WEB_MEDIA_SOURCE
-            },
-            campaign:    { keys: ["c", "af_campaign", "utm_campaign"], defaultValue: "meta_web_unknown_campaign" },
-            adSet:       { keys: ["af_adset", "utm_content", "utm_adset"] },
-            ad:          { keys: ["af_ad", "utm_term", "utm_ad"] },
-            afSub2:      { keys: ["fbclid"] },
-            afSub5:      { keys: [], defaultValue: META_WEB_MARKER },
+            mediaSource: { keys: ["pid"], defaultValue: META_WEB_MEDIA_SOURCE },
+            campaign:    { keys: ["c"], defaultValue: "%7B%7Bcampaign.name%7D%7D" },
+            adSet:       { keys: ["af_adset"], defaultValue: "%7B%7Badset.name%7D%7D" },
+            afSub5:      { keys: ["fbclid"] },
+            afSub4:      { keys: ["web2app"], defaultValue: WEB_TO_APP_VALUE },
             afCustom: [
-              { paramKey: "af_xp", defaultValue: "custom" },
-              { paramKey: "af_dp", defaultValue: "dominodreams://mainactivity" },
-              { paramKey: "af_c_id", keys: ["af_c_id", "af_campaign_id", "campaign_id", "utm_id"] },
-              { paramKey: "af_campaign_id", keys: ["af_campaign_id", "af_c_id", "campaign_id", "utm_id"] },
-              { paramKey: "af_adset_id", keys: ["af_adset_id", "adset_id"] },
-              { paramKey: "af_ad_id", keys: ["af_ad_id", "ad_id"] }
+              { paramKey: "campaign_id", keys: ["campaign_id"], defaultValue: "%7B%7Bcampaign.id%7D%7D" },
+              { paramKey: "adset_id", keys: ["adset_id"], defaultValue: "%7B%7Badset.id%7D%7D" },
+              { paramKey: "ad_name", keys: ["ad_name"], defaultValue: "%7B%7Bad.name%7D%7D" },
+              { paramKey: "ad_id", keys: ["ad_id"], defaultValue: "%7B%7Bad.id%7D%7D" },
+              { paramKey: "af_ss_ui", defaultValue: "true" }
             ]
           }
         });
         var url = (result && result.clickURL) ? result.clickURL : buildFallback();
-        window.location.href = url;
-        showFallback(url);
+        redirectTo(url);
       } catch (e) {
-        var url = buildFallback();
-        window.location.href = url;
-        showFallback(url);
+        redirectTo(buildFallback());
       }
 
       function showFallback(url) {
