@@ -74,11 +74,11 @@
           + "&pid=" + encodeURIComponent(firstValue(["pid"], META_WEB_MEDIA_SOURCE))
           + "&c=" + encodeURIComponent(firstValue(["c"], "{{campaign.name}}"));
 
-        base = appendParam(base, "campaign_id", firstValue(["campaign_id"], "{{campaign.id}}"));
+        base = appendParam(base, "campaign_id", firstValue(["af_campaign_id"], "{{campaign.id}}"));
         base = appendParam(base, "af_adset", firstValue(["af_adset"], "{{adset.name}}"));
-        base = appendParam(base, "adset_id", firstValue(["adset_id"], "{{adset.id}}"));
-        base = appendParam(base, "ad_name", firstValue(["ad_name"], "{{ad.name}}"));
-        base = appendParam(base, "ad_id", firstValue(["ad_id"], "{{ad.id}}"));
+        base = appendParam(base, "adset_id", firstValue(["af_adset_id"], "{{adset.id}}"));
+        base = appendParam(base, "af_ad", firstValue(["af_ad"]));
+        base = appendParam(base, "ad_id", firstValue(["af_ad_id"], "{{ad.id}}"));
         base = appendParam(base, "fbclid", firstValue(["fbclid"]));
         base = appendParam(base, "af_sub5", firstValue(["fbclid"]));
         base = appendParam(base, "af_sub4", firstValue(["web2app"], WEB_TO_APP_VALUE));
@@ -104,13 +104,13 @@
             mediaSource: { keys: ["pid"], defaultValue: META_WEB_MEDIA_SOURCE },
             campaign:    { keys: ["c"], defaultValue: "%7B%7Bcampaign.name%7D%7D" },
             adSet:       { keys: ["af_adset"], defaultValue: "%7B%7Badset.name%7D%7D" },
+            ad:          { keys: ["af_ad"] },
             afSub5:      { keys: ["fbclid"] },
             afSub4:      { keys: ["web2app"], defaultValue: WEB_TO_APP_VALUE },
             afCustom: [
-              { paramKey: "campaign_id", keys: ["campaign_id"], defaultValue: "%7B%7Bcampaign.id%7D%7D" },
-              { paramKey: "adset_id", keys: ["adset_id"], defaultValue: "%7B%7Badset.id%7D%7D" },
-              { paramKey: "ad_name", keys: ["ad_name"], defaultValue: "%7B%7Bad.name%7D%7D" },
-              { paramKey: "ad_id", keys: ["ad_id"], defaultValue: "%7B%7Bad.id%7D%7D" },
+              { paramKey: "campaign_id", keys: ["af_campaign_id"], defaultValue: "%7B%7Bcampaign.id%7D%7D" },
+              { paramKey: "adset_id", keys: ["af_adset_id"], defaultValue: "%7B%7Badset.id%7D%7D" },
+              { paramKey: "ad_id", keys: ["af_ad_id"], defaultValue: "%7B%7Bad.id%7D%7D" },
               { paramKey: "af_ss_ui", defaultValue: "true" }
             ]
           }
